@@ -104,6 +104,8 @@ class TrajectoryDataset(Dataset):
         non_linear_ped = []
         for path in all_files:
             data = read_file(path, delim)
+            if data.shape[0] == 0:
+                continue
             frames = np.unique(data[:, 0]).tolist()
             frame_data = []
             for frame in frames:
@@ -125,6 +127,9 @@ class TrajectoryDataset(Dataset):
                 for _, ped_id in enumerate(peds_in_curr_seq):
                     curr_ped_seq = curr_seq_data[curr_seq_data[:, 1] ==
                                                  ped_id, :]
+                    if curr_ped_seq.shape[0] != self.seq_len:
+                        # Missing points in the sequence.
+                        continue
                     curr_ped_seq = np.around(curr_ped_seq, decimals=4)
                     pad_front = frames.index(curr_ped_seq[0, 0]) - idx
                     pad_end = frames.index(curr_ped_seq[-1, 0]) - idx + 1

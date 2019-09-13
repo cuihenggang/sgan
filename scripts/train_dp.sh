@@ -1,8 +1,9 @@
 PYTHONPATH=. ~/tools/miniconda2/bin/python scripts/train.py \
-  --dataset_name 'zara1' \
-  --delim tab \
+  --dataset_name 'dp_vehicle' \
+  --delim ',' \
   --d_type 'local' \
-  --pred_len 8 \
+  --obs_len 5 \
+  --pred_len 40 \
   --encoder_h_dim_g 32 \
   --encoder_h_dim_d 64\
   --decoder_h_dim 32 \
@@ -28,6 +29,6 @@ PYTHONPATH=. ~/tools/miniconda2/bin/python scripts/train.py \
   --num_epochs 500 \
   --pooling_type 'pool_net' \
   --clipping_threshold_g 1.5 \
-  --best_k 10 \
+  --best_k 20 \
   --gpu_num 0 \
   --restore_from_checkpoint 0

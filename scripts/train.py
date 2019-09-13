@@ -28,7 +28,7 @@ logger = logging.getLogger(__name__)
 
 # Dataset options
 parser.add_argument('--dataset_name', default='zara1', type=str)
-parser.add_argument('--delim', default=' ')
+parser.add_argument('--delim', default='\t')
 parser.add_argument('--loader_num_workers', default=4, type=int)
 parser.add_argument('--obs_len', default=8, type=int)
 parser.add_argument('--pred_len', default=8, type=int)
@@ -49,7 +49,7 @@ parser.add_argument('--mlp_dim', default=1024, type=int)
 # Generator Options
 parser.add_argument('--encoder_h_dim_g', default=64, type=int)
 parser.add_argument('--decoder_h_dim_g', default=128, type=int)
-parser.add_argument('--noise_dim', default=None, type=int_tuple)
+parser.add_argument('--noise_dim', default=(0, ), type=int_tuple)
 parser.add_argument('--noise_type', default='gaussian')
 parser.add_argument('--noise_mix_type', default='ped')
 parser.add_argument('--clipping_threshold_g', default=0, type=float)
@@ -117,6 +117,7 @@ def main(args):
 
     logger.info("Initializing train dataset")
     train_dset, train_loader = data_loader(args, train_path)
+    logger.info("Train dataset size: {}".format(len(train_dset)))
     logger.info("Initializing val dataset")
     _, val_loader = data_loader(args, val_path)
 
@@ -183,6 +184,7 @@ def main(args):
     elif args.restore_from_checkpoint == 1:
         restore_path = os.path.join(args.output_dir,
                                     '%s_with_model.pt' % args.checkpoint_name)
+    print('restore_path', restore_path)
 
     if restore_path is not None and os.path.isfile(restore_path):
         logger.info('Restoring from checkpoint {}'.format(restore_path))

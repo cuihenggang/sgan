@@ -102,14 +102,18 @@ def main(args):
         paths = [args.model_path]
 
     for path in paths:
+        print(path)
         checkpoint = torch.load(path)
         generator = get_generator(checkpoint)
         _args = AttrDict(checkpoint['args'])
+        _args.dataset_name = 'dp'
+        _args.delim = ','
         path = get_dset_path(_args.dataset_name, args.dset_type)
         _, loader = data_loader(_args, path)
         ade, fde = evaluate(_args, loader, generator, args.num_samples)
         print('Dataset: {}, Pred Len: {}, ADE: {:.2f}, FDE: {:.2f}'.format(
             _args.dataset_name, _args.pred_len, ade, fde))
+        break
 
 
 if __name__ == '__main__':
