@@ -549,7 +549,7 @@ class TrajectoryGenerator(nn.Module):
 class TrajectoryDiscriminator(nn.Module):
     def __init__(
         self, obs_len, pred_len, embedding_dim=64, h_dim=64, mlp_dim=1024,
-        num_layers=1, activation='relu', batch_norm=True, dropout=0.0,
+        num_layers=1, activation='leakyrelu', batch_norm=True, dropout=0.0,
         d_type='local'
     ):
         super(TrajectoryDiscriminator, self).__init__()
