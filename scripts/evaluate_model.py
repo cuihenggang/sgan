@@ -2,7 +2,8 @@ import argparse
 import os
 import torch
 
-from attrdict import AttrDict
+#from attrdict import AttrDict
+from munch import Munch
 
 from sgan.data.loader import data_loader
 from sgan.models import TrajectoryGenerator
@@ -13,10 +14,10 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--model_path', type=str)
 parser.add_argument('--num_samples', default=20, type=int)
 parser.add_argument('--dset_type', default='test', type=str)
-
+parser.add_argument('--traj_aggre_method', type=str)
 
 def get_generator(checkpoint):
-    args = AttrDict(checkpoint['args'])
+    args = Munch(checkpoint['args'])
     generator = TrajectoryGenerator(
         obs_len=args.obs_len,
         pred_len=args.pred_len,
@@ -41,7 +42,7 @@ def get_generator(checkpoint):
     return generator
 
 
-def evaluate_helper(error, seq_start_end):
+def evaluate_helper(error, seq_start_end, traj_aggre_method):
     sum_ = 0
     error = torch.stack(error, dim=1)
 
@@ -50,12 +51,13 @@ def evaluate_helper(error, seq_start_end):
         end = end.item()
         _error = error[start:end]
         _error = torch.sum(_error, dim=0)
-        _error = torch.min(_error)
+        aggregation_func = getattr(torch, traj_aggre_method)
+        _error = aggregation_func(_error)
         sum_ += _error
     return sum_
 
 
-def evaluate(args, loader, generator, num_samples):
+def evaluate(args, loader, generator, num_samples, traj_aggre_method):
     ade_outer, fde_outer = [], []
     total_traj = 0
     with torch.no_grad():
@@ -81,8 +83,8 @@ def evaluate(args, loader, generator, num_samples):
                     pred_traj_fake[-1], pred_traj_gt[-1], mode='raw'
                 ))
 
-            ade_sum = evaluate_helper(ade, seq_start_end)
-            fde_sum = evaluate_helper(fde, seq_start_end)
+            ade_sum = evaluate_helper(ade, seq_start_end, traj_aggre_method)
+            fde_sum = evaluate_helper(fde, seq_start_end, traj_aggre_method)
 
             ade_outer.append(ade_sum)
             fde_outer.append(fde_sum)
@@ -102,15 +104,14 @@ def main(args):
         paths = [args.model_path]
 
     for path in paths:
-        print(path)
         checkpoint = torch.load(path)
         generator = get_generator(checkpoint)
-        _args = AttrDict(checkpoint['args'])
-        _args.dataset_name = 'dp'
-        _args.delim = ','
+        _args = Munch(checkpoint['args'])
+        #_args.dataset_name = 'dp'
+        #_args.delim = ','
         path = get_dset_path(_args.dataset_name, args.dset_type)
         _, loader = data_loader(_args, path)
-        ade, fde = evaluate(_args, loader, generator, args.num_samples)
+        ade, fde = evaluate(_args, loader, generator, args.num_samples, args.traj_aggre_method)
         print('Dataset: {}, Pred Len: {}, ADE: {:.2f}, FDE: {:.2f}'.format(
             _args.dataset_name, _args.pred_len, ade, fde))
         break
